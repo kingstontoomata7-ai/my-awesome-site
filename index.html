@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>System Update</title>
+    <title>Definitely Not a Prank</title>
     <style>
         * {
             margin: 0;
@@ -12,12 +12,21 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Comic Sans MS', cursive;
             overflow: hidden;
-            background: #000;
+            background: linear-gradient(45deg, #ff00ff, #00ffff, #ffff00, #ff00ff);
+            background-size: 400% 400%;
+            animation: gradientShift 3s ease infinite;
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"><text y="15" font-size="20">🤡</text></svg>'), auto;
         }
 
-        .prank-selector {
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .start-screen {
             position: fixed;
             top: 0;
             left: 0;
@@ -25,459 +34,465 @@
             height: 100%;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             display: flex;
-            flex-direction: column;
             justify-content: center;
             align-items: center;
+            flex-direction: column;
+            z-index: 10000;
+        }
+
+        .start-screen h1 {
+            color: white;
+            font-size: 4em;
+            margin-bottom: 30px;
+            text-shadow: 3px 3px 10px rgba(0,0,0,0.5);
+            animation: pulse 1s ease infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .start-screen p {
+            color: white;
+            font-size: 1.5em;
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        .start-btn {
+            background: white;
+            color: #667eea;
+            border: none;
+            padding: 20px 60px;
+            font-size: 1.8em;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .start-btn:hover {
+            transform: scale(1.1) rotate(5deg);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+        }
+
+        .popup-window {
+            position: absolute;
+            background: white;
+            border: 3px solid #000;
+            border-radius: 10px;
+            box-shadow: 5px 5px 20px rgba(0,0,0,0.3);
+            min-width: 300px;
             z-index: 1000;
         }
 
-        .prank-selector h1 {
+        .popup-header {
+            background: linear-gradient(to right, #0078d4, #00bcf2);
             color: white;
-            font-size: 3em;
-            margin-bottom: 50px;
-            text-shadow: 2px 2px 10px rgba(0,0,0,0.3);
-        }
-
-        .prank-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 30px;
-            max-width: 1200px;
-            padding: 20px;
-        }
-
-        .prank-card {
-            background: rgba(255,255,255,0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 30px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border: 2px solid rgba(255,255,255,0.2);
-        }
-
-        .prank-card:hover {
-            transform: translateY(-10px);
-            background: rgba(255,255,255,0.2);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
-        }
-
-        .prank-card h2 {
-            color: white;
-            margin-bottom: 10px;
-            font-size: 1.5em;
-        }
-
-        .prank-card p {
-            color: rgba(255,255,255,0.8);
-            line-height: 1.6;
-        }
-
-        /* Fake Windows Update */
-        .windows-update {
-            display: none;
-            width: 100%;
-            height: 100vh;
-            background: #0078d4;
-            color: white;
-            justify-content: center;
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
             align-items: center;
-            flex-direction: column;
+            border-radius: 7px 7px 0 0;
+            cursor: move;
         }
 
-        .update-content {
+        .popup-title {
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        .popup-close {
+            background: #ff4444;
+            border: none;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+
+        .popup-close:hover {
+            background: #ff0000;
+            transform: rotate(90deg);
+            transition: all 0.3s ease;
+        }
+
+        .popup-content {
+            padding: 20px;
+            font-size: 1.2em;
             text-align: center;
         }
 
-        .update-content h1 {
+        .popup-content img {
+            max-width: 100%;
+            height: auto;
+            margin: 10px 0;
+        }
+
+        .spinning {
+            animation: spin 2s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .shake {
+            animation: shake 0.5s ease infinite;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .rainbow-text {
+            background: linear-gradient(to right, red, orange, yellow, green, blue, indigo, violet);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 2em;
+            font-weight: bold;
+            animation: rainbowMove 2s linear infinite;
+        }
+
+        @keyframes rainbowMove {
+            0% { filter: hue-rotate(0deg); }
+            100% { filter: hue-rotate(360deg); }
+        }
+
+        .emoji-rain {
+            position: fixed;
             font-size: 3em;
-            margin-bottom: 30px;
-            font-weight: 300;
+            pointer-events: none;
+            z-index: 999;
+            animation: fall linear;
         }
 
-        .update-content p {
-            font-size: 1.5em;
-            margin-bottom: 50px;
+        @keyframes fall {
+            to {
+                transform: translateY(100vh) rotate(360deg);
+            }
         }
 
-        .progress-bar {
-            width: 400px;
-            height: 6px;
-            background: rgba(255,255,255,0.3);
-            border-radius: 3px;
-            overflow: hidden;
-            margin: 0 auto;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: white;
-            width: 0%;
-            animation: progress 30s linear infinite;
-        }
-
-        @keyframes progress {
-            0% { width: 0%; }
-            100% { width: 100%; }
-        }
-
-        /* Cracked Screen */
-        .cracked-screen {
-            display: none;
+        .alert-overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            pointer-events: none;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
             z-index: 9999;
         }
 
-        .crack {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600"><path d="M400,300 L350,250 L320,280 L300,250 L250,300 L200,280 L150,320" stroke="rgba(255,255,255,0.6)" stroke-width="3" fill="none"/><path d="M400,300 L450,250 L480,280 L500,250 L550,300 L600,280 L650,320" stroke="rgba(255,255,255,0.6)" stroke-width="3" fill="none"/><path d="M400,300 L380,350 L360,380 L340,420 L320,450" stroke="rgba(255,255,255,0.5)" stroke-width="2" fill="none"/><path d="M400,300 L420,350 L440,380 L460,420 L480,450" stroke="rgba(255,255,255,0.5)" stroke-width="2" fill="none"/></svg>') center center no-repeat;
-            background-size: cover;
-            filter: drop-shadow(0 0 10px rgba(0,0,0,0.5));
-        }
-
-        /* Fake Error */
-        .error-screen {
-            display: none;
-            width: 100%;
-            height: 100vh;
-            background: #1e1e1e;
-            color: white;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-        }
-
-        .error-content {
-            text-align: center;
-            max-width: 600px;
+        .alert-box {
+            background: white;
             padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 500px;
+            animation: bounce 0.5s ease;
         }
 
-        .error-icon {
-            font-size: 5em;
-            margin-bottom: 20px;
+        @keyframes bounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
         }
 
-        .error-content h1 {
+        .alert-box h2 {
             font-size: 2.5em;
             margin-bottom: 20px;
+            color: #ff4444;
         }
 
-        .error-content p {
-            font-size: 1.2em;
-            line-height: 1.6;
-            margin-bottom: 30px;
-            color: #ccc;
-        }
-
-        .error-code {
-            background: #2d2d2d;
-            padding: 20px;
-            border-radius: 10px;
-            font-family: 'Courier New', monospace;
-            color: #ff6b6b;
-        }
-
-        /* Keyboard Scrambler */
-        .keyboard-scrambler {
-            display: none;
-            width: 100%;
-            height: 100vh;
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-        }
-
-        .scrambler-content {
-            text-align: center;
+        .alert-box button {
+            background: #0078d4;
             color: white;
-            max-width: 600px;
-            padding: 40px;
-        }
-
-        .scrambler-content h1 {
-            font-size: 2.5em;
-            margin-bottom: 30px;
-        }
-
-        .text-input {
-            width: 100%;
-            padding: 20px;
-            font-size: 1.5em;
-            border-radius: 10px;
             border: none;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-
-        .scrambled-output {
-            background: rgba(255,255,255,0.1);
-            padding: 30px;
-            border-radius: 10px;
-            min-height: 100px;
+            padding: 15px 40px;
             font-size: 1.3em;
-            word-wrap: break-word;
-        }
-
-        /* Matrix Rain */
-        .matrix-rain {
-            display: none;
-            width: 100%;
-            height: 100vh;
-            background: #000;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .matrix-canvas {
-            display: block;
-            position: absolute;
-            top: 0;
-            left: 0;
-        }
-
-        .matrix-text {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: #0f0;
-            font-size: 2em;
-            text-align: center;
-            z-index: 10;
-            text-shadow: 0 0 10px #0f0;
-        }
-
-        .back-btn {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: rgba(255,255,255,0.2);
-            color: white;
-            border: 2px solid white;
-            padding: 15px 30px;
             border-radius: 10px;
             cursor: pointer;
-            font-size: 1em;
-            backdrop-filter: blur(10px);
-            z-index: 10000;
-            transition: all 0.3s ease;
-        }
-
-        .back-btn:hover {
-            background: rgba(255,255,255,0.3);
-            transform: scale(1.05);
+            margin: 10px;
         }
     </style>
 </head>
 <body>
-    <div class="prank-selector" id="selector">
-        <h1>🎭 Choose Your Prank</h1>
-        <div class="prank-grid">
-            <div class="prank-card" onclick="startPrank('update')">
-                <h2>💻 Fake Update</h2>
-                <p>Classic Windows update screen that never finishes. Perfect for making someone wait!</p>
-            </div>
-            <div class="prank-card" onclick="startPrank('cracked')">
-                <h2>📱 Cracked Screen</h2>
-                <p>Makes it look like the screen is shattered. Click anywhere to "break" it!</p>
-            </div>
-            <div class="prank-card" onclick="startPrank('error')">
-                <h2>⚠️ System Error</h2>
-                <p>Scary-looking error message that looks like something went wrong.</p>
-            </div>
-            <div class="prank-card" onclick="startPrank('scrambler')">
-                <h2>⌨️ Keyboard Scrambler</h2>
-                <p>Every letter they type gets scrambled into random characters!</p>
-            </div>
-            <div class="prank-card" onclick="startPrank('matrix')">
-                <h2>🟢 Hacker Mode</h2>
-                <p>Matrix-style falling code. Make them think they've been hacked!</p>
-            </div>
-        </div>
+    <div class="start-screen" id="startScreen">
+        <h1>🎉 Welcome! 🎉</h1>
+        <p>Click the button below to see something awesome!</p>
+        <button class="start-btn" onclick="startChaos()">CLICK ME!</button>
     </div>
 
-    <button class="back-btn" onclick="goBack()" style="display: none;" id="backBtn">← Back</button>
-
-    <!-- Windows Update -->
-    <div class="windows-update" id="update">
-        <div class="update-content">
-            <h1>Working on updates</h1>
-            <p id="percentage">0% complete</p>
-            <div class="progress-bar">
-                <div class="progress-fill"></div>
-            </div>
-            <p style="margin-top: 30px; font-size: 1em;">Don't turn off your PC. This will take a while.</p>
-        </div>
-    </div>
-
-    <!-- Cracked Screen -->
-    <div class="cracked-screen" id="cracked">
-        <div class="crack"></div>
-    </div>
-
-    <!-- Error Screen -->
-    <div class="error-screen" id="error">
-        <div class="error-content">
-            <div class="error-icon">⚠️</div>
-            <h1>Critical System Error</h1>
-            <p>Your computer has encountered a critical error and needs to restart. All unsaved data may be lost.</p>
-            <div class="error-code">
-                ERROR CODE: 0x80070057<br>
-                SYSTEM_THREAD_EXCEPTION_NOT_HANDLED
-            </div>
-        </div>
-    </div>
-
-    <!-- Keyboard Scrambler -->
-    <div class="keyboard-scrambler" id="scrambler">
-        <div class="scrambler-content">
-            <h1>Type Something...</h1>
-            <input type="text" class="text-input" id="textInput" placeholder="Start typing...">
-            <div class="scrambled-output" id="output">Your scrambled text will appear here...</div>
-        </div>
-    </div>
-
-    <!-- Matrix Rain -->
-    <div class="matrix-rain" id="matrix">
-        <canvas class="matrix-canvas" id="matrixCanvas"></canvas>
-        <div class="matrix-text">
-            <h1>ACCESS GRANTED</h1>
-            <p>Initiating data transfer...</p>
+    <div class="alert-overlay" id="alertOverlay">
+        <div class="alert-box">
+            <h2>⚠️ WARNING! ⚠️</h2>
+            <p id="alertText" style="font-size: 1.5em; margin: 20px 0;">You've been pranked!</p>
+            <button onclick="closeAlert()">I'VE BEEN PRANKED!</button>
+            <button onclick="morePopups()">MAKE IT WORSE!</button>
         </div>
     </div>
 
     <script>
-        let currentPrank = null;
+        let popupCount = 0;
+        let audioContext;
+        let oscillators = [];
+        let chaosStarted = false;
+        let popups = [];
 
-        function startPrank(type) {
-            currentPrank = type;
-            document.getElementById('selector').style.display = 'none';
-            document.getElementById('backBtn').style.display = 'block';
+        const funnyMessages = [
+            "😂 YOU CAN'T ESCAPE!",
+            "🎪 HAVING FUN YET?",
+            "🤡 GOTCHA!",
+            "🎉 SURPRISE!",
+            "😜 TRY TO CLOSE ME!",
+            "🎊 PARTY TIME!",
+            "🎭 YOU'VE BEEN PRANKED!",
+            "🎨 ENJOY THE CHAOS!",
+            "🎪 CLICK ME IF YOU DARE!",
+            "😈 MUAHAHAHA!",
+            "🦄 MAGICAL MADNESS!",
+            "🌈 RAINBOW POWER!",
+            "🎮 GAME OVER... NOT!",
+            "🍕 PIZZA TIME!",
+            "🎵 CAN'T STOP THE MUSIC!",
+            "👻 BOO!",
+            "🚀 TO INFINITY!",
+            "🌟 STAR POWER!",
+            "💫 SPARKLE SPARKLE!",
+            "🎺 TOOT TOOT!"
+        ];
+
+        const emojis = ["😂", "🤣", "😜", "🤪", "😝", "🎉", "🎊", "🎈", "🎁", "🎀", "🦄", "🌈", "⭐", "💥", "✨"];
+
+        function startChaos() {
+            if (chaosStarted) return;
+            chaosStarted = true;
             
-            if (type === 'update') {
-                document.getElementById('update').style.display = 'flex';
-                animatePercentage();
-            } else if (type === 'cracked') {
-                document.body.style.background = '#fff';
-                document.getElementById('cracked').style.display = 'block';
+            document.getElementById('startScreen').style.display = 'none';
+            
+            initAudio();
+            startAnnoyingSounds();
+            spawnPopups();
+            startEmojiRain();
+            shakeScreen();
+            randomAlerts();
+            
+            document.body.addEventListener('click', spawnPopupOnClick);
+            document.body.addEventListener('mousemove', followMouse);
+        }
+
+        function initAudio() {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+
+        function playBeep(frequency, duration) {
+            if (!audioContext) return;
+            
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.value = frequency;
+            oscillator.type = 'sine';
+            
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + duration);
+        }
+
+        function startAnnoyingSounds() {
+            setInterval(() => {
+                const frequencies = [523, 659, 784, 1047, 1319];
+                const randomFreq = frequencies[Math.floor(Math.random() * frequencies.length)];
+                playBeep(randomFreq, 0.1);
+            }, 500);
+        }
+
+        function spawnPopups() {
+            setInterval(() => {
+                if (popupCount < 20) {
+                    createPopup();
+                }
+            }, 800);
+        }
+
+        function createPopup() {
+            const popup = document.createElement('div');
+            popup.className = 'popup-window';
+            popup.style.left = Math.random() * (window.innerWidth - 300) + 'px';
+            popup.style.top = Math.random() * (window.innerHeight - 200) + 'px';
+            
+            const message = funnyMessages[Math.floor(Math.random() * funnyMessages.length)];
+            
+            popup.innerHTML = `
+                <div class="popup-header">
+                    <span class="popup-title">⚠️ IMPORTANT MESSAGE ${++popupCount}</span>
+                    <button class="popup-close" onclick="tryClose(this)">×</button>
+                </div>
+                <div class="popup-content">
+                    <div class="rainbow-text ${Math.random() > 0.5 ? 'spinning' : 'shake'}">${message}</div>
+                    <p style="margin-top: 15px; font-size: 1.5em;">${emojis[Math.floor(Math.random() * emojis.length)].repeat(5)}</p>
+                </div>
+            `;
+            
+            document.body.appendChild(popup);
+            popups.push(popup);
+            
+            animatePopup(popup);
+        }
+
+        function animatePopup(popup) {
+            let x = parseFloat(popup.style.left);
+            let y = parseFloat(popup.style.top);
+            let vx = (Math.random() - 0.5) * 4;
+            let vy = (Math.random() - 0.5) * 4;
+            
+            function bounce() {
+                x += vx;
+                y += vy;
+                
+                if (x <= 0 || x >= window.innerWidth - popup.offsetWidth) {
+                    vx = -vx;
+                    playBeep(800, 0.05);
+                }
+                if (y <= 0 || y >= window.innerHeight - popup.offsetHeight) {
+                    vy = -vy;
+                    playBeep(600, 0.05);
+                }
+                
+                popup.style.left = x + 'px';
+                popup.style.top = y + 'px';
+                
+                requestAnimationFrame(bounce);
+            }
+            
+            bounce();
+        }
+
+        function tryClose(button) {
+            const popup = button.closest('.popup-window');
+            
+            if (Math.random() > 0.7) {
+                popup.remove();
+                popupCount--;
+                playBeep(400, 0.1);
+            } else {
+                popup.style.transform = 'scale(1.2) rotate(' + (Math.random() * 360) + 'deg)';
                 setTimeout(() => {
-                    document.body.onclick = () => {
-                        document.getElementById('cracked').style.display = 'block';
-                        playBreakSound();
-                    };
-                }, 100);
-            } else if (type === 'error') {
-                document.getElementById('error').style.display = 'flex';
-            } else if (type === 'scrambler') {
-                document.getElementById('scrambler').style.display = 'flex';
-                setupScrambler();
-            } else if (type === 'matrix') {
-                document.getElementById('matrix').style.display = 'block';
-                startMatrix();
+                    popup.style.transform = '';
+                }, 300);
+                createPopup();
+                createPopup();
+                playBeep(1000, 0.2);
             }
         }
 
-        function goBack() {
-            if (currentPrank === 'cracked') {
-                document.body.onclick = null;
-                document.body.style.background = '#000';
-            }
-            
-            document.querySelectorAll('.windows-update, .cracked-screen, .error-screen, .keyboard-scrambler, .matrix-rain').forEach(el => {
-                el.style.display = 'none';
-            });
-            
-            document.getElementById('selector').style.display = 'flex';
-            document.getElementById('backBtn').style.display = 'none';
-            currentPrank = null;
-        }
-
-        function animatePercentage() {
-            let percent = 0;
-            const interval = setInterval(() => {
-                percent += Math.random() * 3;
-                if (percent > 99) percent = 99;
-                document.getElementById('percentage').textContent = Math.floor(percent) + '% complete';
-            }, 1000);
-        }
-
-        function playBreakSound() {
-            // Visual feedback for crack
-            const crack = document.getElementById('cracked');
-            crack.style.animation = 'none';
-            setTimeout(() => {
-                crack.style.animation = '';
-            }, 10);
-        }
-
-        function setupScrambler() {
-            const input = document.getElementById('textInput');
-            const output = document.getElementById('output');
-            const scrambleChars = '!@#$%^&*()_+-=[]{}|;:,.<>?/~`';
-            
-            input.value = '';
-            output.textContent = 'Your scrambled text will appear here...';
-            
-            input.oninput = (e) => {
-                const text = e.target.value;
-                let scrambled = '';
-                for (let char of text) {
-                    if (Math.random() > 0.3) {
-                        scrambled += scrambleChars[Math.floor(Math.random() * scrambleChars.length)];
-                    } else {
-                        scrambled += char;
-                    }
-                }
-                output.textContent = scrambled || 'Your scrambled text will appear here...';
-            };
-        }
-
-        function startMatrix() {
-            const canvas = document.getElementById('matrixCanvas');
-            const ctx = canvas.getContext('2d');
-            
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            
-            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*()';
-            const fontSize = 16;
-            const columns = canvas.width / fontSize;
-            const drops = Array(Math.floor(columns)).fill(1);
-            
-            function draw() {
-                ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
+        function startEmojiRain() {
+            setInterval(() => {
+                const emoji = document.createElement('div');
+                emoji.className = 'emoji-rain';
+                emoji.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+                emoji.style.left = Math.random() * 100 + '%';
+                emoji.style.animationDuration = (Math.random() * 2 + 2) + 's';
+                document.body.appendChild(emoji);
                 
-                ctx.fillStyle = '#0f0';
-                ctx.font = fontSize + 'px monospace';
-                
-                for (let i = 0; i < drops.length; i++) {
-                    const text = chars[Math.floor(Math.random() * chars.length)];
-                    ctx.fillText(text, i * fontSize, drops[i] * fontSize);
-                    
-                    if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
-                        drops[i] = 0;
-                    }
-                    drops[i]++;
+                setTimeout(() => emoji.remove(), 5000);
+            }, 300);
+        }
+
+        function shakeScreen() {
+            setInterval(() => {
+                document.body.style.transform = `translate(${Math.random() * 4 - 2}px, ${Math.random() * 4 - 2}px)`;
+            }, 50);
+        }
+
+        function randomAlerts() {
+            setInterval(() => {
+                if (Math.random() > 0.7) {
+                    showAlert();
                 }
-            }
+            }, 5000);
+        }
+
+        function showAlert() {
+            const messages = [
+                "Your computer is perfectly fine! (Just kidding)",
+                "You have 999+ new notifications!",
+                "Congratulations! You're the 1,000,000th visitor!",
+                "VIRUS DETECTED! (Not really)",
+                "Your files are being deleted... JK! 😂",
+                "System will restart in 5... 4... 3... Never!",
+                "Are you having fun yet?",
+                "Click ANYWHERE to stop... (That won't work)",
+                "This is the most annoying website ever!",
+                "Want to exit? Too bad! 😈"
+            ];
             
-            setInterval(draw, 33);
+            document.getElementById('alertText').textContent = messages[Math.floor(Math.random() * messages.length)];
+            document.getElementById('alertOverlay').style.display = 'flex';
+            playBeep(1200, 0.3);
+        }
+
+        function closeAlert() {
+            document.getElementById('alertOverlay').style.display = 'none';
+            createPopup();
+            createPopup();
+        }
+
+        function morePopups() {
+            document.getElementById('alertOverlay').style.display = 'none';
+            for (let i = 0; i < 5; i++) {
+                setTimeout(() => createPopup(), i * 100);
+            }
+        }
+
+        function spawnPopupOnClick(e) {
+            if (e.target.closest('.start-btn') || e.target.closest('.alert-overlay')) return;
+            
+            if (Math.random() > 0.6) {
+                createPopup();
+                playBeep(Math.random() * 1000 + 200, 0.1);
+            }
+        }
+
+        let mousePopupTimeout;
+        function followMouse(e) {
+            clearTimeout(mousePopupTimeout);
+            mousePopupTimeout = setTimeout(() => {
+                if (Math.random() > 0.95 && popupCount < 15) {
+                    createPopup();
+                }
+            }, 2000);
         }
 
         // Prevent easy escape
         document.addEventListener('keydown', (e) => {
-            if (currentPrank && (e.key === 'Escape' || e.key === 'F11')) {
+            if (chaosStarted && (e.key === 'Escape' || e.key === 'F11' || (e.ctrlKey && e.key === 'w'))) {
                 e.preventDefault();
+                showAlert();
+            }
+        });
+
+        // Prevent right-click
+        document.addEventListener('contextmenu', (e) => {
+            if (chaosStarted) {
+                e.preventDefault();
+                createPopup();
             }
         });
     </script>
