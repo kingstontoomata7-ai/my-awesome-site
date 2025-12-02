@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Update</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            background: #000;
+        }
+
+        .prank-selector {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .prank-selector h1 {
+            color: white;
+            font-size: 3em;
+            margin-bottom: 50px;
+            text-shadow: 2px 2px 10px rgba(0,0,0,0.3);
+        }
+
+        .prank-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            max-width: 1200px;
+            padding: 20px;
+        }
+
+        .prank-card {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid rgba(255,255,255,0.2);
+        }
+
+        .prank-card:hover {
+            transform: translateY(-10px);
+            background: rgba(255,255,255,0.2);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        .prank-card h2 {
+            color: white;
+            margin-bottom: 10px;
+            font-size: 1.5em;
+        }
+
+        .prank-card p {
+            color: rgba(255,255,255,0.8);
+            line-height: 1.6;
+        }
+
+        /* Fake Windows Update */
+        .windows-update {
+            display: none;
+            width: 100%;
+            height: 100vh;
+            background: #0078d4;
+            color: white;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .update-content {
+            text-align: center;
+        }
+
+        .update-content h1 {
+            font-size: 3em;
+            margin-bottom: 30px;
+            font-weight: 300;
+        }
+
+        .update-content p {
+            font-size: 1.5em;
+            margin-bottom: 50px;
+        }
+
+        .progress-bar {
+            width: 400px;
+            height: 6px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 3px;
+            overflow: hidden;
+            margin: 0 auto;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: white;
+            width: 0%;
+            animation: progress 30s linear infinite;
+        }
+
+        @keyframes progress {
+            0% { width: 0%; }
+            100% { width: 100%; }
+        }
+
+        /* Cracked Screen */
+        .cracked-screen {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        .crack {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600"><path d="M400,300 L350,250 L320,280 L300,250 L250,300 L200,280 L150,320" stroke="rgba(255,255,255,0.6)" stroke-width="3" fill="none"/><path d="M400,300 L450,250 L480,280 L500,250 L550,300 L600,280 L650,320" stroke="rgba(255,255,255,0.6)" stroke-width="3" fill="none"/><path d="M400,300 L380,350 L360,380 L340,420 L320,450" stroke="rgba(255,255,255,0.5)" stroke-width="2" fill="none"/><path d="M400,300 L420,350 L440,380 L460,420 L480,450" stroke="rgba(255,255,255,0.5)" stroke-width="2" fill="none"/></svg>') center center no-repeat;
+            background-size: cover;
+            filter: drop-shadow(0 0 10px rgba(0,0,0,0.5));
+        }
+
+        /* Fake Error */
+        .error-screen {
+            display: none;
+            width: 100%;
+            height: 100vh;
+            background: #1e1e1e;
+            color: white;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .error-content {
+            text-align: center;
+            max-width: 600px;
+            padding: 40px;
+        }
+
+        .error-icon {
+            font-size: 5em;
+            margin-bottom: 20px;
+        }
+
+        .error-content h1 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+
+        .error-content p {
+            font-size: 1.2em;
+            line-height: 1.6;
+            margin-bottom: 30px;
+            color: #ccc;
+        }
+
+        .error-code {
+            background: #2d2d2d;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            color: #ff6b6b;
+        }
+
+        /* Keyboard Scrambler */
+        .keyboard-scrambler {
+            display: none;
+            width: 100%;
+            height: 100vh;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .scrambler-content {
+            text-align: center;
+            color: white;
+            max-width: 600px;
+            padding: 40px;
+        }
+
+        .scrambler-content h1 {
+            font-size: 2.5em;
+            margin-bottom: 30px;
+        }
+
+        .text-input {
+            width: 100%;
+            padding: 20px;
+            font-size: 1.5em;
+            border-radius: 10px;
+            border: none;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .scrambled-output {
+            background: rgba(255,255,255,0.1);
+            padding: 30px;
+            border-radius: 10px;
+            min-height: 100px;
+            font-size: 1.3em;
+            word-wrap: break-word;
+        }
+
+        /* Matrix Rain */
+        .matrix-rain {
+            display: none;
+            width: 100%;
+            height: 100vh;
+            background: #000;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .matrix-canvas {
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        .matrix-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #0f0;
+            font-size: 2em;
+            text-align: center;
+            z-index: 10;
+            text-shadow: 0 0 10px #0f0;
+        }
+
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid white;
+            padding: 15px 30px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1em;
+            backdrop-filter: blur(10px);
+            z-index: 10000;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <div class="prank-selector" id="selector">
+        <h1>🎭 Choose Your Prank</h1>
+        <div class="prank-grid">
+            <div class="prank-card" onclick="startPrank('update')">
+                <h2>💻 Fake Update</h2>
+                <p>Classic Windows update screen that never finishes. Perfect for making someone wait!</p>
+            </div>
+            <div class="prank-card" onclick="startPrank('cracked')">
+                <h2>📱 Cracked Screen</h2>
+                <p>Makes it look like the screen is shattered. Click anywhere to "break" it!</p>
+            </div>
+            <div class="prank-card" onclick="startPrank('error')">
+                <h2>⚠️ System Error</h2>
+                <p>Scary-looking error message that looks like something went wrong.</p>
+            </div>
+            <div class="prank-card" onclick="startPrank('scrambler')">
+                <h2>⌨️ Keyboard Scrambler</h2>
+                <p>Every letter they type gets scrambled into random characters!</p>
+            </div>
+            <div class="prank-card" onclick="startPrank('matrix')">
+                <h2>🟢 Hacker Mode</h2>
+                <p>Matrix-style falling code. Make them think they've been hacked!</p>
+            </div>
+        </div>
+    </div>
+
+    <button class="back-btn" onclick="goBack()" style="display: none;" id="backBtn">← Back</button>
+
+    <!-- Windows Update -->
+    <div class="windows-update" id="update">
+        <div class="update-content">
+            <h1>Working on updates</h1>
+            <p id="percentage">0% complete</p>
+            <div class="progress-bar">
+                <div class="progress-fill"></div>
+            </div>
+            <p style="margin-top: 30px; font-size: 1em;">Don't turn off your PC. This will take a while.</p>
+        </div>
+    </div>
+
+    <!-- Cracked Screen -->
+    <div class="cracked-screen" id="cracked">
+        <div class="crack"></div>
+    </div>
+
+    <!-- Error Screen -->
+    <div class="error-screen" id="error">
+        <div class="error-content">
+            <div class="error-icon">⚠️</div>
+            <h1>Critical System Error</h1>
+            <p>Your computer has encountered a critical error and needs to restart. All unsaved data may be lost.</p>
+            <div class="error-code">
+                ERROR CODE: 0x80070057<br>
+                SYSTEM_THREAD_EXCEPTION_NOT_HANDLED
+            </div>
+        </div>
+    </div>
+
+    <!-- Keyboard Scrambler -->
+    <div class="keyboard-scrambler" id="scrambler">
+        <div class="scrambler-content">
+            <h1>Type Something...</h1>
+            <input type="text" class="text-input" id="textInput" placeholder="Start typing...">
+            <div class="scrambled-output" id="output">Your scrambled text will appear here...</div>
+        </div>
+    </div>
+
+    <!-- Matrix Rain -->
+    <div class="matrix-rain" id="matrix">
+        <canvas class="matrix-canvas" id="matrixCanvas"></canvas>
+        <div class="matrix-text">
+            <h1>ACCESS GRANTED</h1>
+            <p>Initiating data transfer...</p>
+        </div>
+    </div>
+
+    <script>
+        let currentPrank = null;
+
+        function startPrank(type) {
+            currentPrank = type;
+            document.getElementById('selector').style.display = 'none';
+            document.getElementById('backBtn').style.display = 'block';
+            
+            if (type === 'update') {
+                document.getElementById('update').style.display = 'flex';
+                animatePercentage();
+            } else if (type === 'cracked') {
+                document.body.style.background = '#fff';
+                document.getElementById('cracked').style.display = 'block';
+                setTimeout(() => {
+                    document.body.onclick = () => {
+                        document.getElementById('cracked').style.display = 'block';
+                        playBreakSound();
+                    };
+                }, 100);
+            } else if (type === 'error') {
+                document.getElementById('error').style.display = 'flex';
+            } else if (type === 'scrambler') {
+                document.getElementById('scrambler').style.display = 'flex';
+                setupScrambler();
+            } else if (type === 'matrix') {
+                document.getElementById('matrix').style.display = 'block';
+                startMatrix();
+            }
+        }
+
+        function goBack() {
+            if (currentPrank === 'cracked') {
+                document.body.onclick = null;
+                document.body.style.background = '#000';
+            }
+            
+            document.querySelectorAll('.windows-update, .cracked-screen, .error-screen, .keyboard-scrambler, .matrix-rain').forEach(el => {
+                el.style.display = 'none';
+            });
+            
+            document.getElementById('selector').style.display = 'flex';
+            document.getElementById('backBtn').style.display = 'none';
+            currentPrank = null;
+        }
+
+        function animatePercentage() {
+            let percent = 0;
+            const interval = setInterval(() => {
+                percent += Math.random() * 3;
+                if (percent > 99) percent = 99;
+                document.getElementById('percentage').textContent = Math.floor(percent) + '% complete';
+            }, 1000);
+        }
+
+        function playBreakSound() {
+            // Visual feedback for crack
+            const crack = document.getElementById('cracked');
+            crack.style.animation = 'none';
+            setTimeout(() => {
+                crack.style.animation = '';
+            }, 10);
+        }
+
+        function setupScrambler() {
+            const input = document.getElementById('textInput');
+            const output = document.getElementById('output');
+            const scrambleChars = '!@#$%^&*()_+-=[]{}|;:,.<>?/~`';
+            
+            input.value = '';
+            output.textContent = 'Your scrambled text will appear here...';
+            
+            input.oninput = (e) => {
+                const text = e.target.value;
+                let scrambled = '';
+                for (let char of text) {
+                    if (Math.random() > 0.3) {
+                        scrambled += scrambleChars[Math.floor(Math.random() * scrambleChars.length)];
+                    } else {
+                        scrambled += char;
+                    }
+                }
+                output.textContent = scrambled || 'Your scrambled text will appear here...';
+            };
+        }
+
+        function startMatrix() {
+            const canvas = document.getElementById('matrixCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*()';
+            const fontSize = 16;
+            const columns = canvas.width / fontSize;
+            const drops = Array(Math.floor(columns)).fill(1);
+            
+            function draw() {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                ctx.fillStyle = '#0f0';
+                ctx.font = fontSize + 'px monospace';
+                
+                for (let i = 0; i < drops.length; i++) {
+                    const text = chars[Math.floor(Math.random() * chars.length)];
+                    ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+                    
+                    if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                        drops[i] = 0;
+                    }
+                    drops[i]++;
+                }
+            }
+            
+            setInterval(draw, 33);
+        }
+
+        // Prevent easy escape
+        document.addEventListener('keydown', (e) => {
+            if (currentPrank && (e.key === 'Escape' || e.key === 'F11')) {
+                e.preventDefault();
+            }
+        });
+    </script>
+</body>
+</html>
