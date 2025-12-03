@@ -1,500 +1,678 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Definitely Not a Prank</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+import React, { useState, useEffect, useRef } from 'react';
+import { Trophy, Zap, Star, TrendingUp, Award, Crown, Sparkles, Target, Flame, Gift, Settings, Volume2, VolumeX, RotateCcw, Download, Upload, ChevronRight, Lock } from 'lucide-react';
 
-        body {
-            font-family: 'Comic Sans MS', cursive;
-            overflow: hidden;
-            background: linear-gradient(45deg, #ff00ff, #00ffff, #ffff00, #ff00ff);
-            background-size: 400% 400%;
-            animation: gradientShift 3s ease infinite;
-            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"><text y="15" font-size="20">🤡</text></svg>'), auto;
-        }
+export default function UltimateClicker() {
+  const [points, setPoints] = useState(0);
+  const [totalClicks, setTotalClicks] = useState(0);
+  const [clickPower, setClickPower] = useState(1);
+  const [cps, setCps] = useState(0);
+  const [level, setLevel] = useState(1);
+  const [xp, setXp] = useState(0);
+  const [multiplier, setMultiplier] = useState(1);
+  const [critChance, setCritChance] = useState(0);
+  const [critMultiplier, setCritMultiplier] = useState(2);
+  const [comboCount, setComboCount] = useState(0);
+  const [maxCombo, setMaxCombo] = useState(0);
+  const [prestige, setPrestige] = useState(0);
+  const [prestigeBonus, setPrestigeBonus] = useState(1);
+  const [goldenClicks, setGoldenClicks] = useState(0);
+  const [autoClickerLevel, setAutoClickerLevel] = useState(0);
+  const [tab, setTab] = useState('main');
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [particles, setParticles] = useState([]);
+  const [floatingTexts, setFloatingTexts] = useState([]);
+  const [theme, setTheme] = useState('purple');
+  const [showGoldenClick, setShowGoldenClick] = useState(false);
+  const [goldenClickPos, setGoldenClickPos] = useState({ x: 0, y: 0 });
+  const [achievements, setAchievements] = useState([]);
+  const [stats, setStats] = useState({
+    totalEarned: 0,
+    timeElapsed: 0,
+    avgCPS: 0,
+    biggestClick: 0
+  });
+  const comboTimerRef = useRef(null);
+  const gameStartRef = useRef(Date.now());
 
-        @keyframes gradientShift {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
+  const themes = {
+    purple: { bg: 'from-purple-900 to-indigo-900', accent: 'purple', glow: 'shadow-purple-500/50' },
+    blue: { bg: 'from-blue-900 to-cyan-900', accent: 'blue', glow: 'shadow-blue-500/50' },
+    green: { bg: 'from-green-900 to-emerald-900', accent: 'green', glow: 'shadow-green-500/50' },
+    red: { bg: 'from-red-900 to-orange-900', accent: 'red', glow: 'shadow-red-500/50' },
+    pink: { bg: 'from-pink-900 to-rose-900', accent: 'pink', glow: 'shadow-pink-500/50' }
+  };
 
-        .start-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            z-index: 10000;
-        }
+  const upgrades = [
+    { id: 'click1', name: 'Better Cursor', cost: 15, effect: () => setClickPower(p => p + 1), desc: '+1 per click', level: 0, maxLevel: 50 },
+    { id: 'click2', name: 'Iron Clicker', cost: 100, effect: () => setClickPower(p => p + 5), desc: '+5 per click', level: 0, maxLevel: 25 },
+    { id: 'click3', name: 'Steel Clicker', cost: 500, effect: () => setClickPower(p => p + 25), desc: '+25 per click', level: 0, maxLevel: 20 },
+    { id: 'crit1', name: 'Lucky Strike', cost: 200, effect: () => setCritChance(c => c + 5), desc: '+5% crit chance', level: 0, maxLevel: 10 },
+    { id: 'crit2', name: 'Critical Master', cost: 1000, effect: () => setCritMultiplier(m => m + 0.5), desc: '+0.5x crit damage', level: 0, maxLevel: 10 },
+    { id: 'multi1', name: 'Double Trouble', cost: 750, effect: () => setMultiplier(m => m * 1.1), desc: '+10% multiplier', level: 0, maxLevel: 15 }
+  ];
 
-        .start-screen h1 {
-            color: white;
-            font-size: 4em;
-            margin-bottom: 30px;
-            text-shadow: 3px 3px 10px rgba(0,0,0,0.5);
-            animation: pulse 1s ease infinite;
-        }
+  const generators = [
+    { id: 'gen1', name: 'Auto Clicker', baseCost: 50, baseGen: 1, level: 0, desc: '1/sec' },
+    { id: 'gen2', name: 'Click Factory', baseCost: 300, baseGen: 5, level: 0, desc: '5/sec' },
+    { id: 'gen3', name: 'Click Farm', baseCost: 1500, baseGen: 25, level: 0, desc: '25/sec' },
+    { id: 'gen4', name: 'Click Empire', baseCost: 8000, baseGen: 100, level: 0, desc: '100/sec' },
+    { id: 'gen5', name: 'Click Universe', baseCost: 50000, baseGen: 500, level: 0, desc: '500/sec' },
+    { id: 'gen6', name: 'Quantum Clicker', baseCost: 250000, baseGen: 2500, level: 0, desc: '2500/sec' }
+  ];
 
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-        }
+  const [upgradeStates, setUpgradeStates] = useState(upgrades);
+  const [generatorStates, setGeneratorStates] = useState(generators);
 
-        .start-screen p {
-            color: white;
-            font-size: 1.5em;
-            margin-bottom: 40px;
-            text-align: center;
-        }
+  const achievementList = [
+    { id: 'clicks_100', name: 'First Steps', desc: 'Click 100 times', check: () => totalClicks >= 100, reward: 'points', amount: 500 },
+    { id: 'clicks_1000', name: 'Clicking Addict', desc: 'Click 1000 times', check: () => totalClicks >= 1000, reward: 'multiplier', amount: 0.1 },
+    { id: 'points_1000', name: 'Millionaire', desc: 'Earn 1000 points', check: () => stats.totalEarned >= 1000, reward: 'points', amount: 1000 },
+    { id: 'points_10000', name: 'Rich', desc: 'Earn 10000 points', check: () => stats.totalEarned >= 10000, reward: 'clickPower', amount: 10 },
+    { id: 'combo_10', name: 'Combo Master', desc: 'Reach 10x combo', check: () => maxCombo >= 10, reward: 'critChance', amount: 5 },
+    { id: 'combo_50', name: 'Combo God', desc: 'Reach 50x combo', check: () => maxCombo >= 50, reward: 'critMultiplier', amount: 1 },
+    { id: 'level_10', name: 'Level Up', desc: 'Reach level 10', check: () => level >= 10, reward: 'multiplier', amount: 0.2 },
+    { id: 'prestige_1', name: 'New Beginning', desc: 'Prestige once', check: () => prestige >= 1, reward: 'prestigeBonus', amount: 0.1 },
+    { id: 'golden_10', name: 'Golden Touch', desc: 'Click 10 golden clicks', check: () => goldenClicks >= 10, reward: 'points', amount: 5000 },
+    { id: 'cps_100', name: 'Passive Income', desc: 'Reach 100 CPS', check: () => cps >= 100, reward: 'multiplier', amount: 0.15 }
+  ];
 
-        .start-btn {
-            background: white;
-            color: #667eea;
-            border: none;
-            padding: 20px 60px;
-            font-size: 1.8em;
-            border-radius: 50px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-weight: bold;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-        }
+  // Auto clicker
+  useEffect(() => {
+    const interval = setInterval(() => {
+      let totalCPS = 0;
+      generatorStates.forEach(gen => {
+        totalCPS += gen.baseGen * gen.level;
+      });
+      setCps(totalCPS);
+      if (totalCPS > 0) {
+        const earned = (totalCPS * multiplier * prestigeBonus) / 10;
+        setPoints(p => p + earned);
+        setStats(s => ({ ...s, totalEarned: s.totalEarned + earned }));
+      }
+    }, 100);
+    return () => clearInterval(interval);
+  }, [generatorStates, multiplier, prestigeBonus]);
 
-        .start-btn:hover {
-            transform: scale(1.1) rotate(5deg);
-            box-shadow: 0 15px 40px rgba(0,0,0,0.4);
-        }
+  // XP and leveling
+  useEffect(() => {
+    const xpNeeded = level * 100;
+    if (xp >= xpNeeded) {
+      setLevel(l => l + 1);
+      setXp(x => x - xpNeeded);
+      setMultiplier(m => m * 1.05);
+      addFloatingText('LEVEL UP!', window.innerWidth / 2, window.innerHeight / 2, '#FFD700');
+    }
+  }, [xp, level]);
 
-        .popup-window {
-            position: absolute;
-            background: white;
-            border: 3px solid #000;
-            border-radius: 10px;
-            box-shadow: 5px 5px 20px rgba(0,0,0,0.3);
-            min-width: 300px;
-            z-index: 1000;
-        }
+  // Golden click spawn
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (Math.random() < 0.05) {
+        setShowGoldenClick(true);
+        setGoldenClickPos({
+          x: Math.random() * (window.innerWidth - 100),
+          y: Math.random() * (window.innerHeight - 100)
+        });
+        setTimeout(() => setShowGoldenClick(false), 5000);
+      }
+    }, 10000);
+    return () => clearInterval(interval);
+  }, []);
 
-        .popup-header {
-            background: linear-gradient(to right, #0078d4, #00bcf2);
-            color: white;
-            padding: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-radius: 7px 7px 0 0;
-            cursor: move;
-        }
+  // Achievements check
+  useEffect(() => {
+    achievementList.forEach(ach => {
+      if (!achievements.includes(ach.id) && ach.check()) {
+        setAchievements(a => [...a, ach.id]);
+        addFloatingText(`Achievement: ${ach.name}`, window.innerWidth / 2, 100, '#FFD700');
+        applyAchievementReward(ach);
+      }
+    });
+  }, [totalClicks, stats, level, maxCombo, prestige, goldenClicks, cps]);
 
-        .popup-title {
-            font-weight: bold;
-            font-size: 1.1em;
-        }
+  // Stats timer
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setStats(s => ({ ...s, timeElapsed: Math.floor((Date.now() - gameStartRef.current) / 1000) }));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
-        .popup-close {
-            background: #ff4444;
-            border: none;
-            color: white;
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 1.2em;
-        }
+  const applyAchievementReward = (ach) => {
+    switch (ach.reward) {
+      case 'points':
+        setPoints(p => p + ach.amount);
+        break;
+      case 'multiplier':
+        setMultiplier(m => m + ach.amount);
+        break;
+      case 'clickPower':
+        setClickPower(p => p + ach.amount);
+        break;
+      case 'critChance':
+        setCritChance(c => c + ach.amount);
+        break;
+      case 'critMultiplier':
+        setCritMultiplier(m => m + ach.amount);
+        break;
+      case 'prestigeBonus':
+        setPrestigeBonus(b => b + ach.amount);
+        break;
+    }
+  };
 
-        .popup-close:hover {
-            background: #ff0000;
-            transform: rotate(90deg);
-            transition: all 0.3s ease;
-        }
+  const handleClick = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    let earnedPoints = clickPower * multiplier * prestigeBonus;
+    const isCrit = Math.random() * 100 < critChance;
+    
+    if (isCrit) {
+      earnedPoints *= critMultiplier;
+      addFloatingText(`CRIT! +${Math.floor(earnedPoints)}`, e.clientX, e.clientY, '#FF0000');
+    } else {
+      addFloatingText(`+${Math.floor(earnedPoints)}`, e.clientX, e.clientY, '#FFD700');
+    }
+    
+    setPoints(p => p + earnedPoints);
+    setTotalClicks(c => c + 1);
+    setXp(x => x + Math.floor(earnedPoints / 10));
+    setStats(s => ({ 
+      ...s, 
+      totalEarned: s.totalEarned + earnedPoints,
+      biggestClick: Math.max(s.biggestClick, earnedPoints)
+    }));
+    
+    // Combo system
+    setComboCount(c => Math.min(c + 1, 100));
+    if (comboCount > maxCombo) setMaxCombo(comboCount);
+    clearTimeout(comboTimerRef.current);
+    comboTimerRef.current = setTimeout(() => setComboCount(0), 1000);
+    
+    // Particles
+    for (let i = 0; i < 5; i++) {
+      addParticle(x, y);
+    }
+  };
 
-        .popup-content {
-            padding: 20px;
-            font-size: 1.2em;
-            text-align: center;
-        }
+  const handleGoldenClick = (e) => {
+    e.stopPropagation();
+    const bonus = points * 0.5 + 1000;
+    setPoints(p => p + bonus);
+    setGoldenClicks(g => g + 1);
+    setShowGoldenClick(false);
+    addFloatingText(`GOLDEN! +${Math.floor(bonus)}`, e.clientX, e.clientY, '#FFD700');
+  };
 
-        .popup-content img {
-            max-width: 100%;
-            height: auto;
-            margin: 10px 0;
-        }
+  const addParticle = (x, y) => {
+    const particle = {
+      id: Math.random(),
+      x,
+      y,
+      vx: (Math.random() - 0.5) * 4,
+      vy: (Math.random() - 0.5) * 4 - 2
+    };
+    setParticles(p => [...p, particle]);
+    setTimeout(() => {
+      setParticles(p => p.filter(pa => pa.id !== particle.id));
+    }, 1000);
+  };
 
-        .spinning {
-            animation: spin 2s linear infinite;
-        }
+  const addFloatingText = (text, x, y, color) => {
+    const ft = { id: Math.random(), text, x, y, color };
+    setFloatingTexts(f => [...f, ft]);
+    setTimeout(() => {
+      setFloatingTexts(f => f.filter(t => t.id !== ft.id));
+    }, 2000);
+  };
 
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
+  const buyUpgrade = (upg) => {
+    const upgrade = upgradeStates.find(u => u.id === upg.id);
+    if (!upgrade || upgrade.level >= upgrade.maxLevel) return;
+    
+    const cost = upg.cost * Math.pow(1.15, upgrade.level);
+    if (points >= cost) {
+      setPoints(p => p - cost);
+      upg.effect();
+      setUpgradeStates(ups => ups.map(u => 
+        u.id === upg.id ? { ...u, level: u.level + 1 } : u
+      ));
+    }
+  };
 
-        .shake {
-            animation: shake 0.5s ease infinite;
-        }
+  const buyGenerator = (gen) => {
+    const generator = generatorStates.find(g => g.id === gen.id);
+    const cost = gen.baseCost * Math.pow(1.15, generator.level);
+    if (points >= cost) {
+      setPoints(p => p - cost);
+      setGeneratorStates(gens => gens.map(g => 
+        g.id === gen.id ? { ...g, level: g.level + 1 } : g
+      ));
+    }
+  };
 
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-10px); }
-            75% { transform: translateX(10px); }
-        }
+  const handlePrestige = () => {
+    if (level < 20) return;
+    const prestigeGain = Math.floor(level / 10);
+    setPrestige(p => p + prestigeGain);
+    setPrestigeBonus(b => b + prestigeGain * 0.1);
+    
+    // Reset
+    setPoints(0);
+    setLevel(1);
+    setXp(0);
+    setClickPower(1);
+    setTotalClicks(0);
+    setComboCount(0);
+    setUpgradeStates(upgrades);
+    setGeneratorStates(generators);
+  };
 
-        .rainbow-text {
-            background: linear-gradient(to right, red, orange, yellow, green, blue, indigo, violet);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            font-size: 2em;
-            font-weight: bold;
-            animation: rainbowMove 2s linear infinite;
-        }
+  const saveGame = () => {
+    const saveData = {
+      points, totalClicks, clickPower, level, xp, multiplier, critChance, critMultiplier,
+      prestige, prestigeBonus, goldenClicks, upgradeStates, generatorStates, achievements, stats, maxCombo
+    };
+    const blob = new Blob([JSON.stringify(saveData)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'clicker_save.json';
+    a.click();
+  };
 
-        @keyframes rainbowMove {
-            0% { filter: hue-rotate(0deg); }
-            100% { filter: hue-rotate(360deg); }
-        }
+  const loadGame = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const data = JSON.parse(ev.target.result);
+        setPoints(data.points || 0);
+        setTotalClicks(data.totalClicks || 0);
+        setClickPower(data.clickPower || 1);
+        setLevel(data.level || 1);
+        setXp(data.xp || 0);
+        setMultiplier(data.multiplier || 1);
+        setCritChance(data.critChance || 0);
+        setCritMultiplier(data.critMultiplier || 2);
+        setPrestige(data.prestige || 0);
+        setPrestigeBonus(data.prestigeBonus || 1);
+        setGoldenClicks(data.goldenClicks || 0);
+        setUpgradeStates(data.upgradeStates || upgrades);
+        setGeneratorStates(data.generatorStates || generators);
+        setAchievements(data.achievements || []);
+        setStats(data.stats || stats);
+        setMaxCombo(data.maxCombo || 0);
+      };
+      reader.readAsText(file);
+    }
+  };
 
-        .emoji-rain {
-            position: fixed;
-            font-size: 3em;
-            pointer-events: none;
-            z-index: 999;
-            animation: fall linear;
-        }
+  const resetGame = () => {
+    if (!confirm('Reset all progress?')) return;
+    setPoints(0);
+    setTotalClicks(0);
+    setClickPower(1);
+    setLevel(1);
+    setXp(0);
+    setMultiplier(1);
+    setCritChance(0);
+    setCritMultiplier(2);
+    setPrestige(0);
+    setPrestigeBonus(1);
+    setGoldenClicks(0);
+    setComboCount(0);
+    setMaxCombo(0);
+    setUpgradeStates(upgrades);
+    setGeneratorStates(generators);
+    setAchievements([]);
+    setStats({ totalEarned: 0, timeElapsed: 0, avgCPS: 0, biggestClick: 0 });
+    gameStartRef.current = Date.now();
+  };
 
-        @keyframes fall {
-            to {
-                transform: translateY(100vh) rotate(360deg);
-            }
-        }
+  const formatNumber = (num) => {
+    if (num >= 1e12) return (num / 1e12).toFixed(2) + 'T';
+    if (num >= 1e9) return (num / 1e9).toFixed(2) + 'B';
+    if (num >= 1e6) return (num / 1e6).toFixed(2) + 'M';
+    if (num >= 1e3) return (num / 1e3).toFixed(2) + 'K';
+    return Math.floor(num).toLocaleString();
+  };
 
-        .alert-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.8);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-        }
+  const formatTime = (seconds) => {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+    return `${h}h ${m}m ${s}s`;
+  };
 
-        .alert-box {
-            background: white;
-            padding: 40px;
-            border-radius: 20px;
-            text-align: center;
-            max-width: 500px;
-            animation: bounce 0.5s ease;
-        }
-
-        @keyframes bounce {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-        }
-
-        .alert-box h2 {
-            font-size: 2.5em;
-            margin-bottom: 20px;
-            color: #ff4444;
-        }
-
-        .alert-box button {
-            background: #0078d4;
-            color: white;
-            border: none;
-            padding: 15px 40px;
-            font-size: 1.3em;
-            border-radius: 10px;
-            cursor: pointer;
-            margin: 10px;
-        }
-    </style>
-</head>
-<body>
-    <div class="start-screen" id="startScreen">
-        <h1>🎉 Welcome! 🎉</h1>
-        <p>Click the button below to see something awesome!</p>
-        <button class="start-btn" onclick="startChaos()">CLICK ME!</button>
-    </div>
-
-    <div class="alert-overlay" id="alertOverlay">
-        <div class="alert-box">
-            <h2>⚠️ WARNING! ⚠️</h2>
-            <p id="alertText" style="font-size: 1.5em; margin: 20px 0;">You've been pranked!</p>
-            <button onclick="closeAlert()">I'VE BEEN PRANKED!</button>
-            <button onclick="morePopups()">MAKE IT WORSE!</button>
+  return (
+    <div className={`min-h-screen bg-gradient-to-br ${themes[theme].bg} text-white p-4 overflow-hidden relative`}>
+      {/* Particles */}
+      {particles.map(p => (
+        <div
+          key={p.id}
+          className="absolute w-2 h-2 bg-yellow-400 rounded-full pointer-events-none animate-ping"
+          style={{ left: p.x, top: p.y }}
+        />
+      ))}
+      
+      {/* Floating texts */}
+      {floatingTexts.map(ft => (
+        <div
+          key={ft.id}
+          className="absolute font-bold text-2xl pointer-events-none animate-bounce"
+          style={{ left: ft.x, top: ft.y, color: ft.color }}
+        >
+          {ft.text}
         </div>
+      ))}
+
+      {/* Golden Click */}
+      {showGoldenClick && (
+        <button
+          onClick={handleGoldenClick}
+          className="absolute w-20 h-20 bg-yellow-400 rounded-full animate-pulse shadow-2xl shadow-yellow-500/50 flex items-center justify-center text-4xl hover:scale-110 transition-transform z-50"
+          style={{ left: goldenClickPos.x, top: goldenClickPos.y }}
+        >
+          ⭐
+        </button>
+      )}
+
+      {/* Top Bar */}
+      <div className="max-w-7xl mx-auto mb-4">
+        <div className="bg-black/30 backdrop-blur rounded-lg p-4 flex flex-wrap gap-4 justify-between items-center">
+          <div className="flex items-center gap-4">
+            <div>
+              <div className="text-sm opacity-70">Points</div>
+              <div className="text-3xl font-bold">{formatNumber(points)}</div>
+            </div>
+            <div>
+              <div className="text-sm opacity-70">Level {level}</div>
+              <div className="w-40 bg-gray-700 rounded-full h-2">
+                <div 
+                  className={`bg-${themes[theme].accent}-500 h-2 rounded-full transition-all`}
+                  style={{ width: `${(xp / (level * 100)) * 100}%` }}
+                />
+              </div>
+            </div>
+            <div>
+              <div className="text-sm opacity-70">CPS</div>
+              <div className="text-xl font-bold">{formatNumber(cps * multiplier * prestigeBonus)}</div>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <button onClick={() => setSoundEnabled(!soundEnabled)} className="p-2 bg-white/10 rounded hover:bg-white/20">
+              {soundEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
+            </button>
+            <button onClick={saveGame} className="p-2 bg-white/10 rounded hover:bg-white/20">
+              <Download size={20} />
+            </button>
+            <label className="p-2 bg-white/10 rounded hover:bg-white/20 cursor-pointer">
+              <Upload size={20} />
+              <input type="file" onChange={loadGame} className="hidden" accept=".json" />
+            </label>
+            <button onClick={resetGame} className="p-2 bg-white/10 rounded hover:bg-white/20">
+              <RotateCcw size={20} />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* Left Sidebar */}
+        <div className="space-y-4">
+          <div className="bg-black/30 backdrop-blur rounded-lg p-4">
+            <h3 className="font-bold mb-2 flex items-center gap-2">
+              <Trophy className="text-yellow-400" size={20} />
+              Stats
+            </h3>
+            <div className="space-y-1 text-sm">
+              <div className="flex justify-between">
+                <span>Total Clicks:</span>
+                <span className="font-bold">{totalClicks.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Click Power:</span>
+                <span className="font-bold">{formatNumber(clickPower)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Multiplier:</span>
+                <span className="font-bold">{multiplier.toFixed(2)}x</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Crit Chance:</span>
+                <span className="font-bold">{critChance.toFixed(1)}%</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Crit Multi:</span>
+                <span className="font-bold">{critMultiplier.toFixed(1)}x</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Combo:</span>
+                <span className="font-bold">{comboCount}x (Max: {maxCombo})</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Prestige:</span>
+                <span className="font-bold">{prestige} (+{((prestigeBonus - 1) * 100).toFixed(0)}%)</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Golden Clicks:</span>
+                <span className="font-bold">{goldenClicks}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Time Played:</span>
+                <span className="font-bold">{formatTime(stats.timeElapsed)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Total Earned:</span>
+                <span className="font-bold">{formatNumber(stats.totalEarned)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Biggest Click:</span>
+                <span className="font-bold">{formatNumber(stats.biggestClick)}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-black/30 backdrop-blur rounded-lg p-4">
+            <h3 className="font-bold mb-2 flex items-center gap-2">
+              <Settings size={20} />
+              Themes
+            </h3>
+            <div className="flex gap-2 flex-wrap">
+              {Object.keys(themes).map(t => (
+                <button
+                  key={t}
+                  onClick={() => setTheme(t)}
+                  className={`w-8 h-8 rounded-full bg-${themes[t].accent}-500 ${theme === t ? 'ring-2 ring-white' : ''}`}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Center - Clicker */}
+        <div className="flex flex-col items-center justify-center">
+          <button
+            onClick={handleClick}
+            className={`w-64 h-64 rounded-full bg-gradient-to-br from-${themes[theme].accent}-400 to-${themes[theme].accent}-600 shadow-2xl ${themes[theme].glow} hover:scale-105 active:scale-95 transition-all flex items-center justify-center text-6xl relative overflow-hidden group`}
+          >
+            <div className="absolute inset-0 bg-white/20 group-hover:bg-white/30 transition-all" />
+            <Sparkles className="relative z-10" size={80} />
+          </button>
+          <div className="mt-6 text-center">
+            <div className="text-2xl font-bold">
+              +{formatNumber(clickPower * multiplier * prestigeBonus)} per click
+            </div>
+            {comboCount > 1 && (
+              <div className="text-xl text-yellow-400 animate-pulse mt-2">
+                {comboCount}x COMBO!
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Right Sidebar - Tabs */}
+        <div className="bg-black/30 backdrop-blur rounded-lg p-4">
+          <div className="flex gap-2 mb-4 border-b border-white/20">
+            {['Upgrades', 'Generators', 'Prestige', 'Achievements'].map(t => (
+              <button
+                key={t}
+                onClick={() => setTab(t.toLowerCase())}
+                className={`px-3 py-2 ${tab === t.toLowerCase() ? 'border-b-2 border-white' : 'opacity-50'}`}
+              >
+                {t}
+              </button>
+            ))}
+          </div>
+
+          <div className="space-y-2 max-h-[600px] overflow-y-auto">
+            {tab === 'upgrades' && upgradeStates.map(upg => {
+              const cost = upg.cost * Math.pow(1.15, upg.level);
+              const canBuy = points >= cost && upg.level < upg.maxLevel;
+              return (
+                <button
+                  key={upg.id}
+                  onClick={() => buyUpgrade(upg)}
+                  disabled={!canBuy}
+                  className={`w-full p-3 rounded-lg text-left ${canBuy ? 'bg-green-600/30 hover:bg-green-600/50' : 'bg-gray-600/30'} transition-all`}
+                >
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <div className="font-bold">{upg.name}</div>
+                      <div className="text-sm opacity-70">{upg.desc}</div>
+                      <div className="text-xs mt-1">Level: {upg.level}/{upg.maxLevel}</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-bold">{formatNumber(cost)}</div>
+                      <Zap size={16} className="inline" />
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+
+            {tab === 'generators' && generatorStates.map(gen => {
+              const cost = gen.baseCost * Math.pow(1.15, gen.level);
+              const canBuy = points >= cost;
+              return (
+                <button
+                  key={gen.id}
+                  onClick={() => buyGenerator(gen)}
+                  disabled={!canBuy}
+                  className={`w-full p-3 rounded-lg text-left ${canBuy ? 'bg-blue-600/30 hover:bg-blue-600/50' : 'bg-gray-600/30'} transition-all`}
+                >
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <div className="font-bold">{gen.name}</div>
+                      <div className="text-sm opacity-70">{gen.desc}</div>
+                      <div className="text-xs mt-1">Owned: {gen.level}</div>
+                      <div className="text-xs">Total: {formatNumber(gen.baseGen * gen.level)}/sec</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-bold">{formatNumber(cost)}</div>
+                      <TrendingUp size={16} className="inline" />
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+
+            {tab === 'prestige' && (
+              <div className="space-y-4">
+                <div className="bg-yellow-600/20 p-4 rounded-lg border border-yellow-500/50">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Crown className="text-yellow-400" size={24} />
+                    <h3 className="font-bold text-xl">Prestige System</h3>
+                  </div>
+                  <p className="text-sm opacity-80 mb-4">
+                    Reset your progress for permanent bonuses! Requires level 20+
+                  </p>
+                  <div className="space-y-2 mb-4">
+                    <div className="flex justify-between">
+                      <span>Current Prestige:</span>
+                      <span className="font-bold">{prestige}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Current Bonus:</span>
+                      <span className="font-bold text-green-400">+{((prestigeBonus - 1) * 100).toFixed(0)}%</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Next Prestige Gain:</span>
+                      <span className="font-bold text-yellow-400">{level >= 20 ? Math.floor(level / 10) : 0}</span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={handlePrestige}
+                    disabled={level < 20}
+                    className={`w-full py-3 rounded-lg font-bold ${level >= 20 ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-gray-600 cursor-not-allowed'}`}
+                  >
+                    {level >= 20 ? '✨ PRESTIGE NOW ✨' : `🔒 Reach Level 20 (${level}/20)`}
+                  </button>
+                </div>
+                <div className="bg-purple-600/20 p-4 rounded-lg">
+                  <h4 className="font-bold mb-2">Prestige Benefits:</h4>
+                  <ul className="text-sm space-y-1 opacity-80">
+                    <li>• +10% to all production per prestige level</li>
+                    <li>• Keep all achievements</li>
+                    <li>• Unlock higher tier upgrades</li>
+                    <li>• Faster progression on reset</li>
+                  </ul>
+                </div>
+              </div>
+            )}
+
+            {tab === 'achievements' && (
+              <div className="space-y-2">
+                {achievementList.map(ach => {
+                  const unlocked = achievements.includes(ach.id);
+                  return (
+                    <div
+                      key={ach.id}
+                      className={`p-3 rounded-lg ${unlocked ? 'bg-green-600/30 border border-green-500/50' : 'bg-gray-600/30'}`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="mt-1">
+                          {unlocked ? (
+                            <Award className="text-yellow-400" size={24} />
+                          ) : (
+                            <Lock className="opacity-30" size={24} />
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <div className="font-bold flex items-center gap-2">
+                            {ach.name}
+                            {unlocked && <span className="text-xs bg-green-500 px-2 py-0.5 rounded">UNLOCKED</span>}
+                          </div>
+                          <div className="text-sm opacity-70">{ach.desc}</div>
+                          <div className="text-xs mt-1 text-yellow-400">
+                            Reward: {ach.reward} +{ach.amount}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom Info Bar */}
+      <div className="max-w-7xl mx-auto mt-4">
+        <div className="bg-black/30 backdrop-blur rounded-lg p-3 text-center text-sm">
+          <div className="flex flex-wrap justify-center gap-4">
+            <span>💎 Achievements: {achievements.length}/{achievementList.length}</span>
+            <span>🔥 Max Combo: {maxCombo}x</span>
+            <span>⭐ Golden Clicks: {goldenClicks}</span>
+            <span>👑 Prestige Level: {prestige}</span>
+          </div>
+        </div>
+      </div>
     </div>
-
-    <script>
-        let popupCount = 0;
-        let audioContext;
-        let oscillators = [];
-        let chaosStarted = false;
-        let popups = [];
-
-        const funnyMessages = [
-            "😂 YOU CAN'T ESCAPE!",
-            "🎪 HAVING FUN YET?",
-            "🤡 GOTCHA!",
-            "🎉 SURPRISE!",
-            "😜 TRY TO CLOSE ME!",
-            "🎊 PARTY TIME!",
-            "🎭 YOU'VE BEEN PRANKED!",
-            "🎨 ENJOY THE CHAOS!",
-            "🎪 CLICK ME IF YOU DARE!",
-            "😈 MUAHAHAHA!",
-            "🦄 MAGICAL MADNESS!",
-            "🌈 RAINBOW POWER!",
-            "🎮 GAME OVER... NOT!",
-            "🍕 PIZZA TIME!",
-            "🎵 CAN'T STOP THE MUSIC!",
-            "👻 BOO!",
-            "🚀 TO INFINITY!",
-            "🌟 STAR POWER!",
-            "💫 SPARKLE SPARKLE!",
-            "🎺 TOOT TOOT!"
-        ];
-
-        const emojis = ["😂", "🤣", "😜", "🤪", "😝", "🎉", "🎊", "🎈", "🎁", "🎀", "🦄", "🌈", "⭐", "💥", "✨"];
-
-        function startChaos() {
-            if (chaosStarted) return;
-            chaosStarted = true;
-            
-            document.getElementById('startScreen').style.display = 'none';
-            
-            initAudio();
-            startAnnoyingSounds();
-            spawnPopups();
-            startEmojiRain();
-            shakeScreen();
-            randomAlerts();
-            
-            document.body.addEventListener('click', spawnPopupOnClick);
-            document.body.addEventListener('mousemove', followMouse);
-        }
-
-        function initAudio() {
-            audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        }
-
-        function playBeep(frequency, duration) {
-            if (!audioContext) return;
-            
-            const oscillator = audioContext.createOscillator();
-            const gainNode = audioContext.createGain();
-            
-            oscillator.connect(gainNode);
-            gainNode.connect(audioContext.destination);
-            
-            oscillator.frequency.value = frequency;
-            oscillator.type = 'sine';
-            
-            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
-            
-            oscillator.start(audioContext.currentTime);
-            oscillator.stop(audioContext.currentTime + duration);
-        }
-
-        function startAnnoyingSounds() {
-            setInterval(() => {
-                const frequencies = [523, 659, 784, 1047, 1319];
-                const randomFreq = frequencies[Math.floor(Math.random() * frequencies.length)];
-                playBeep(randomFreq, 0.1);
-            }, 500);
-        }
-
-        function spawnPopups() {
-            setInterval(() => {
-                if (popupCount < 20) {
-                    createPopup();
-                }
-            }, 800);
-        }
-
-        function createPopup() {
-            const popup = document.createElement('div');
-            popup.className = 'popup-window';
-            popup.style.left = Math.random() * (window.innerWidth - 300) + 'px';
-            popup.style.top = Math.random() * (window.innerHeight - 200) + 'px';
-            
-            const message = funnyMessages[Math.floor(Math.random() * funnyMessages.length)];
-            
-            popup.innerHTML = `
-                <div class="popup-header">
-                    <span class="popup-title">⚠️ IMPORTANT MESSAGE ${++popupCount}</span>
-                    <button class="popup-close" onclick="tryClose(this)">×</button>
-                </div>
-                <div class="popup-content">
-                    <div class="rainbow-text ${Math.random() > 0.5 ? 'spinning' : 'shake'}">${message}</div>
-                    <p style="margin-top: 15px; font-size: 1.5em;">${emojis[Math.floor(Math.random() * emojis.length)].repeat(5)}</p>
-                </div>
-            `;
-            
-            document.body.appendChild(popup);
-            popups.push(popup);
-            
-            animatePopup(popup);
-        }
-
-        function animatePopup(popup) {
-            let x = parseFloat(popup.style.left);
-            let y = parseFloat(popup.style.top);
-            let vx = (Math.random() - 0.5) * 4;
-            let vy = (Math.random() - 0.5) * 4;
-            
-            function bounce() {
-                x += vx;
-                y += vy;
-                
-                if (x <= 0 || x >= window.innerWidth - popup.offsetWidth) {
-                    vx = -vx;
-                    playBeep(800, 0.05);
-                }
-                if (y <= 0 || y >= window.innerHeight - popup.offsetHeight) {
-                    vy = -vy;
-                    playBeep(600, 0.05);
-                }
-                
-                popup.style.left = x + 'px';
-                popup.style.top = y + 'px';
-                
-                requestAnimationFrame(bounce);
-            }
-            
-            bounce();
-        }
-
-        function tryClose(button) {
-            const popup = button.closest('.popup-window');
-            
-            if (Math.random() > 0.7) {
-                popup.remove();
-                popupCount--;
-                playBeep(400, 0.1);
-            } else {
-                popup.style.transform = 'scale(1.2) rotate(' + (Math.random() * 360) + 'deg)';
-                setTimeout(() => {
-                    popup.style.transform = '';
-                }, 300);
-                createPopup();
-                createPopup();
-                playBeep(1000, 0.2);
-            }
-        }
-
-        function startEmojiRain() {
-            setInterval(() => {
-                const emoji = document.createElement('div');
-                emoji.className = 'emoji-rain';
-                emoji.textContent = emojis[Math.floor(Math.random() * emojis.length)];
-                emoji.style.left = Math.random() * 100 + '%';
-                emoji.style.animationDuration = (Math.random() * 2 + 2) + 's';
-                document.body.appendChild(emoji);
-                
-                setTimeout(() => emoji.remove(), 5000);
-            }, 300);
-        }
-
-        function shakeScreen() {
-            setInterval(() => {
-                document.body.style.transform = `translate(${Math.random() * 4 - 2}px, ${Math.random() * 4 - 2}px)`;
-            }, 50);
-        }
-
-        function randomAlerts() {
-            setInterval(() => {
-                if (Math.random() > 0.7) {
-                    showAlert();
-                }
-            }, 5000);
-        }
-
-        function showAlert() {
-            const messages = [
-                "Your computer is perfectly fine! (Just kidding)",
-                "You have 999+ new notifications!",
-                "Congratulations! You're the 1,000,000th visitor!",
-                "VIRUS DETECTED! (Not really)",
-                "Your files are being deleted... JK! 😂",
-                "System will restart in 5... 4... 3... Never!",
-                "Are you having fun yet?",
-                "Click ANYWHERE to stop... (That won't work)",
-                "This is the most annoying website ever!",
-                "Want to exit? Too bad! 😈"
-            ];
-            
-            document.getElementById('alertText').textContent = messages[Math.floor(Math.random() * messages.length)];
-            document.getElementById('alertOverlay').style.display = 'flex';
-            playBeep(1200, 0.3);
-        }
-
-        function closeAlert() {
-            document.getElementById('alertOverlay').style.display = 'none';
-            createPopup();
-            createPopup();
-        }
-
-        function morePopups() {
-            document.getElementById('alertOverlay').style.display = 'none';
-            for (let i = 0; i < 5; i++) {
-                setTimeout(() => createPopup(), i * 100);
-            }
-        }
-
-        function spawnPopupOnClick(e) {
-            if (e.target.closest('.start-btn') || e.target.closest('.alert-overlay')) return;
-            
-            if (Math.random() > 0.6) {
-                createPopup();
-                playBeep(Math.random() * 1000 + 200, 0.1);
-            }
-        }
-
-        let mousePopupTimeout;
-        function followMouse(e) {
-            clearTimeout(mousePopupTimeout);
-            mousePopupTimeout = setTimeout(() => {
-                if (Math.random() > 0.95 && popupCount < 15) {
-                    createPopup();
-                }
-            }, 2000);
-        }
-
-        // Prevent easy escape
-        document.addEventListener('keydown', (e) => {
-            if (chaosStarted && (e.key === 'Escape' || e.key === 'F11' || (e.ctrlKey && e.key === 'w'))) {
-                e.preventDefault();
-                showAlert();
-            }
-        });
-
-        // Prevent right-click
-        document.addEventListener('contextmenu', (e) => {
-            if (chaosStarted) {
-                e.preventDefault();
-                createPopup();
-            }
-        });
-    </script>
-</body>
-</html>
+  );
+}
